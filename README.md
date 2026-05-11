@@ -1,5 +1,21 @@
 # Spindle
 
+[![ci](https://github.com/ritjayg/spindle/actions/workflows/ci.yml/badge.svg)](https://github.com/ritjayg/spindle/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/spindle?label=PyPI&color=lightgrey)](https://pypi.org/project/spindle/)
+[![Python](https://img.shields.io/badge/python-3.11%20|%203.12-blue)](https://github.com/ritjayg/spindle)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+
+## Why Spindle?
+
+| Dimension | [Claude Code](https://github.com/anthropics/claude-code) (subagents) | [Aider](https://github.com/Aider-AI/aider) | [SWE-agent](https://github.com/SWE-agent/SWE-agent) | **Spindle** |
+|---|---|:---:|:---:|:---:|
+| **Parallel exploration** | Yes — multiple subagents, human-directed | Single-threaded pair-programming loop | Primarily single agent + terminal | **N branches by default**, each with its own scoped context |
+| **Mid-run kill signal** | Varies by workflow | Tests after edits; not multi-branch racing | Harness-driven evaluation | **Verifier checkpoints** on partial patches using real `pytest` exit codes |
+| **Repo-local learning** | Session-scoped | Repo map + conversation | Benchmark-oriented | **SQLite LearnedRouter** biases future file scope from past wins on *your* repo |
+
+Spindle is complementary, not a drop-in for every workflow: it optimizes for *searching* a fix surface when tests are trustworthy and you want amortized context savings.
+
 > Parallel exploration runtime for coding agents. Branches run real tests at checkpoints, and Spindle learns your repo.
 
 Most coding agents grind a single linear path through a feature: read the repo, plan, edit, test, repeat — dragging a fat context window through every step. **Spindle** spawns N lightweight branches in parallel, each with **scoped context** (only the files that branch actually needs), runs real tests at mid-run checkpoints, kills losing branches based on **actual execution signal** (not another LLM's opinion), and **learns your repo over time** — the 100th issue you run uses less context than the first.
@@ -48,6 +64,7 @@ Parallel agent search isn't a new idea — best-of-N, Tree-of-Thoughts, Reflexio
 | File | Role |
 |---|---|
 | `runtime.py` | Async `TaskGroup` orchestrator. Spawns branches, runs the supervisor loop, calls the verifier at checkpoints, finalizes winners, records outcomes back to the router. |
+| `planner.py` | `ApproachPlanner.generate` — LLM JSON plan of orthogonal one-liners, with deterministic fallback. |
 | `branch.py` | `BranchState` dataclass + forkable lifecycle (pending → running → completed/killed/failed). |
 | `context.py` | Tree-sitter repo-map + `scope_for_approach(...)`. Blends keyword baseline with learned router boosts. |
 | `agent.py` | The tool-use loop. Tools: `read_file`, `grep`, `write_patch`, `run_tests`, `done`. Model-agnostic via litellm. |
@@ -57,7 +74,7 @@ Parallel agent search isn't a new idea — best-of-N, Tree-of-Thoughts, Reflexio
 | `ledger.py` | SQLite trace store: runs, branches, events. Every prompt, response, tool call, token, dollar amount. |
 | `cli.py` | `spindle run`, `spindle stats`, `spindle runs`. Rich-rendered tables. |
 | `evals/ablation.py` | The experiment that proves Edge C earns its keep: two passes (no-router vs router), token/win-rate deltas. |
-| `evals/swebench_lite.py` | SWE-bench Lite harness scaffold. Wire up `swebench` package to make it real. |
+| `evals/swebench_lite.py` | Loads SWE-bench (Lite) via `swebench`, exposes `docker_image_key`, maps winner patches to harness predictions. |
 
 ## Install
 
@@ -103,9 +120,38 @@ python -m evals.ablation \
 
 The report writes per-issue numbers plus a verdict line. If pass B (with router) is ≥10% cheaper than pass A (no router) at the same win rate — or if pass B's second half is ≥15% cheaper than its first half — Edge C is earning its keep. If not, you need a stronger signal (embeddings, learned scoring).
 
+## Benchmarks
+
+This section is reserved for **measured** SWE-bench Lite numbers produced on your hardware. Do not paste estimates.
+
+```bash
+uv sync --extra bench
+uv run python -m evals.swebench_lite --limit 5 --split lite
+```
+
+After a real harness run, paste a short summary table here (pass@1, mean tokens, wall time, cost).
+
+## Roadmap
+
+- [x] v0.1: Core runtime, mid-run checkpoints, learned router
+- [ ] v0.2: LLM planner, real SWE-bench numbers, ablation results
+- [ ] v0.3: Embedding-based scoping, learned verifier, parallel sandbox pool
+
+## Citing Spindle
+
+```bibtex
+@software{spindle2026,
+  title        = {Spindle: Parallel exploration runtime for coding agents},
+  author       = {Ritya},
+  year         = {2026},
+  url          = {https://github.com/ritjayg/spindle},
+  note         = {Open source, MIT License}
+}
+```
+
 ## Status
 
-Alpha. Core runtime is in. SWE-bench harness is a scaffold. Real benchmark numbers are pending — that's the next thing to ship.
+Alpha. Core runtime, planner, and harness scaffolding are in place. Published SWE-bench figures belong in **Benchmarks** only after you run the harness.
 
 ## License
 

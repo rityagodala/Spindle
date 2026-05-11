@@ -29,6 +29,7 @@ dependencies = [
 
 [project.optional-dependencies]
 sandbox = ["docker>=7.1"]
+bench = ["swebench>=2.0"]
 dev = [
     "pytest>=8.2",
     "pytest-asyncio>=0.23",
