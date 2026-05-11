@@ -57,6 +57,7 @@ async def _run_one(
         use_sandbox=False,
         use_learned_router=use_router,
         record_outcomes=True,
+        use_llm_planner=False,
     )
     rt = Runtime(repo_root=repo, config=cfg, ledger=ledger, router=router)
     r = await rt.run(issue)

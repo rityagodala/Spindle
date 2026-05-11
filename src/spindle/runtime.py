@@ -26,6 +26,7 @@ from spindle.branch import Branch, BranchStatus
 from spindle.context import RepoMap, scope_for_approach
 from spindle.learning import LearnedRouter
 from spindle.ledger import Ledger
+from spindle.planner import ApproachPlanner, default_approaches_for_task
 from spindle.sandbox import Sandbox, make_sandbox
 from spindle.verifier import Verifier
 
@@ -48,6 +49,7 @@ class RuntimeConfig:
     # Edge C controls
     use_learned_router: bool = True
     record_outcomes: bool = True
+    use_llm_planner: bool = True
 
 
 @dataclass
@@ -87,10 +89,14 @@ class Runtime:
         # 1. Build repo-map.
         repo_map = RepoMap.build(self.repo_root)
 
-        # 2. Approaches (caller-supplied or defaults).
-        approaches = self.config.approaches or _default_approaches(
-            task, self.config.n_branches
-        )
+        # 2. Approaches (caller-supplied, LLM planner, or deterministic defaults).
+        if self.config.approaches:
+            approaches = self.config.approaches
+        elif self.config.use_llm_planner:
+            planner = ApproachPlanner(self.llm, self.config.model)
+            approaches = await planner.generate(task, self.config.n_branches, repo_map)
+        else:
+            approaches = default_approaches_for_task(task, self.config.n_branches)
 
         # 3. Scope each branch's context — consults LearnedRouter.
         branches: list[Branch] = []
@@ -278,27 +284,3 @@ class Runtime:
             for b in branches:
                 tg.create_task(_test_one(b))
         return results
-
-
-def _default_approaches(task: str, n: int) -> list[str]:
-    """Generate n distinct approach descriptions for a task.
-
-    Deliberately orthogonal along axes that matter for coding:
-      - diff size
-      - whether to refactor adjacent code
-      - level of abstraction
-      - test-first vs implementation-first
-      - reuse vs greenfield
-
-    A real planner LLM would do better, but this is a deterministic baseline
-    you can A/B against.
-    """
-    seeds = [
-        f"Minimal: implement {task} with the smallest possible diff.",
-        f"Refactor-first: clean up adjacent code, then implement {task}.",
-        f"Abstraction: introduce a helper / class for {task} and use it.",
-        f"Test-first: write tests for {task}, then implement to pass them.",
-        f"Reuse: implement {task} reusing existing utilities in the repo.",
-        f"Conservative: implement {task} behind a feature-flag / opt-in.",
-    ]
-    return seeds[:n]

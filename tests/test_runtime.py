@@ -39,6 +39,7 @@ async def test_runtime_end_to_end_mock(sample_repo: Path, tmp_path: Path) -> Non
         use_sandbox=False,
         use_learned_router=True,
         record_outcomes=True,
+        use_llm_planner=False,
     )
     ledger = Ledger(path=tmp_path / "ledger.db")
     router = LearnedRouter(path=tmp_path / "outcomes.db")
@@ -56,8 +57,13 @@ async def test_runtime_end_to_end_mock(sample_repo: Path, tmp_path: Path) -> Non
 @pytest.mark.asyncio
 async def test_runtime_records_to_ledger(sample_repo: Path, tmp_path: Path) -> None:
     llm = MockLLMClient(script=_script() * 4)
-    cfg = RuntimeConfig(n_branches=2, max_steps_per_branch=4,
-                        checkpoint_every_n_steps=999, use_sandbox=False)
+    cfg = RuntimeConfig(
+        n_branches=2,
+        max_steps_per_branch=4,
+        checkpoint_every_n_steps=999,
+        use_sandbox=False,
+        use_llm_planner=False,
+    )
     ledger = Ledger(path=tmp_path / "ledger.db")
     rt = Runtime(repo_root=sample_repo, config=cfg, llm=llm, ledger=ledger)
     result = await rt.run("A task")
@@ -77,6 +83,7 @@ async def test_runtime_no_router_disables_learning(sample_repo: Path, tmp_path: 
         checkpoint_every_n_steps=999,
         use_sandbox=False,
         use_learned_router=False,
+        use_llm_planner=False,
     )
     ledger = Ledger(path=tmp_path / "ledger.db")
     rt = Runtime(repo_root=sample_repo, config=cfg, llm=llm, ledger=ledger)
