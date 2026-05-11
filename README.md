@@ -1,8 +1,8 @@
 # Spindle
 
-[![ci](https://github.com/ritjayg/spindle/actions/workflows/ci.yml/badge.svg)](https://github.com/ritjayg/spindle/actions/workflows/ci.yml)
+[![ci](https://github.com/rityagodala/Spindle/actions/workflows/ci.yml/badge.svg)](https://github.com/rityagodala/Spindle/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/spindle?label=PyPI&color=lightgrey)](https://pypi.org/project/spindle/)
-[![Python](https://img.shields.io/badge/python-3.11%20|%203.12-blue)](https://github.com/ritjayg/spindle)
+[![Python](https://img.shields.io/badge/python-3.11%20|%203.12-blue)](https://github.com/rityagodala/Spindle)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
@@ -79,8 +79,8 @@ Parallel agent search isn't a new idea — best-of-N, Tree-of-Thoughts, Reflexio
 ## Install
 
 ```bash
-git clone https://github.com/ritjayg/spindle
-cd spindle
+git clone https://github.com/rityagodala/Spindle.git
+cd Spindle
 uv sync --all-extras
 export ANTHROPIC_API_KEY=...
 ```
@@ -144,7 +144,7 @@ After a real harness run, paste a short summary table here (pass@1, mean tokens,
   title        = {Spindle: Parallel exploration runtime for coding agents},
   author       = {Ritya},
   year         = {2026},
-  url          = {https://github.com/ritjayg/spindle},
+  url          = {https://github.com/rityagodala/Spindle},
   note         = {Open source, MIT License}
 }
 ```
